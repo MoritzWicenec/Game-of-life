@@ -1,12 +1,12 @@
-#include <iostream>
-#include <cstdlib>
+#include<iostream>
+#include<cstdlib>
 
 #ifdef _WIN32
-// windows code goes here
-  #include <io.h>
-  #include <windows.h>
+    // windows code goes here
+  #include<io.h>
+  #include<windows.h>
 #else
-  #include <unistd.h>
+  #include<unistd.h>
 #endif
 
 using namespace std;
@@ -253,6 +253,16 @@ void clear()
         system("cls");
   #else
         system("clear");
+  #endif
+}
+#endif
+
+void clear()
+{
+  #ifdef _WIN32
+     system("cls");
+  #else
+     system("clear");
   #endif
 }
 
