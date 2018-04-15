@@ -1,8 +1,13 @@
 #include<iostream>
 #include<cstdlib>
-#include<io.h>
-//changing usleep into a usable function on windows
-#include<windows.h>
+
+#ifdef _WIN32
+    // windows code goes here
+  #include<io.h>
+  #include<windows.h>
+#else
+  #include<unistd.h>
+#endif
 
 using namespace std;
 
@@ -19,8 +24,9 @@ struct grid {
 	bool Grid[gridSize][gridSize] = {};
 };
 
+#ifdef _WIN32
 //allow the use of usleep in windows
-void usleep(__int64 usec)
+void usleep(__int64_t usec)
 {
 	HANDLE timer;
 	LARGE_INTEGER ft;
@@ -32,12 +38,22 @@ void usleep(__int64 usec)
 	WaitForSingleObject(timer, INFINITE);
 	CloseHandle(timer);
 }
+#endif
+
+void clear()
+{
+  #ifdef _WIN32
+     system("cls");
+  #else
+     system("clear");
+  #endif
+}
 
 //enter number of cells
 int numberOfCells() {
 
 	int n;
-	cout << "Enter Number of Cells:";
+	cout << "Enter Number of Cells: ";
 	cin >> n;
 	return n;
 }
@@ -89,10 +105,10 @@ grid copyGrid(grid myGrid) {
 	grid myGrid2;
 	for (int x = 0; x < gridSize; x++)
 	{
-		for (int y = 0; y < gridSize; y++) {
-			myGrid2.Grid[x][y] = myGrid.Grid[x][y];
-		}
-
+	   for (int y = 0; y < gridSize; y++)
+	   {
+		myGrid2.Grid[x][y] = myGrid.Grid[x][y];
+	   }
 	}
 	return myGrid2;
 }
@@ -100,60 +116,65 @@ grid copyGrid(grid myGrid) {
 //function that tests all rules of the game of life
 grid upgradeLiveStatus(grid myGrid) {
 	grid myGrid2 = copyGrid(myGrid);
-
 	int count = 0;
 
-	for (int a = 0; a <= gridSize; a++) {
-		
-		for (int b = 0; b <= gridSize; b++) {
-			
-			int alive = 0;
-			for (int c = -1; c < 2; c++)
-			{
-				for (int d = -1; d < 2; d++)
-				{
-					if (!(c == 0 && d == 0))
-					{
-						if (myGrid2.Grid[(a + c + gridSize) % gridSize][(b + d + gridSize) % gridSize])
-						{
-							++alive;
-						}
-					}
-				}
+	for (int a = 0; a <= gridSize; a++)
+	   {
+	      for (int b = 0; b <= gridSize; b++)
+	         {
+	            int alive = 0;
+		    for (int c = -1; c < 2; c++)
+		        {
+			   for (int d = -1; d < 2; d++)
+			      {
+			         if (!(c == 0 && d == 0))
+			 	    {
+				       if (myGrid2.Grid[(a + c + gridSize) % gridSize][(b + d + gridSize) % gridSize])
+					  {
+					      ++alive;
+					  }
+				    }
+			      }
 			}
 			if (alive < 2)
-			{
-				myGrid.Grid[a % gridSize][b % gridSize] = false;
-			}
+			   {
+			      myGrid.Grid[a % gridSize][b % gridSize] = false;
+			   }
 			else if (alive == 3)
-			{
-				myGrid.Grid[a % gridSize][b % gridSize] = true;
-			}
+			   {
+			      myGrid.Grid[a % gridSize][b % gridSize] = true;
+			   }
 			else if (alive > 3)
-			{
-				myGrid.Grid[a % gridSize][b % gridSize] = false; 
-			}
-		}
-	}
-	return myGrid;
+			   {
+			      myGrid.Grid[a % gridSize][b % gridSize] = false;
+			   }
+		 }
+	     }
+	     return myGrid;
 }
 
 //run function
-void run(grid myGrid) {
-	char c = 'r';
-	while (c == 'r') {
+void run(grid myGrid, char mode) {
+	mode = tolower(mode);
+	while (mode == 's' || mode == 'r') {
 
 		myGrid = upgradeLiveStatus(myGrid);
 		printGrid(myGrid);
-		usleep(200000);
-		//cin >> c;
-		while (c == ' ')
-		{
-			cin >> c;
+		if (mode == 's') {
+		   mode = ' ';
+		   while (mode == ' ')
+		   {
+		      cout << "Step/Run/Stop? (s/r/x): ";
+	              cin >> mode;
+		   }
+                }
+                else if (mode == 'r') {
+                   cout << "^C to exit!";
+                   cout << endl;
+                   usleep(200000);
 		}
-		system("CLS");
-	}
-}
+	clear();
+}}
 
 //main function, combines all functions
 int main() {
@@ -168,15 +189,15 @@ int main() {
 			coord p = coordinates(i);
 			gridOne.Grid[p.x][p.y] = true;
 		}
-
+		clear();
 		printGrid(gridOne);
 
-		cout << "Start? (Y/N)";
+		cout << "Run or Step? (r/s): ";
 		cin >> c;
 
-		if (c == 'Y' || c == 'y') {
-
-			run(gridOne);
+		if (c == 'R' || c == 'r' || c == 'S' || c == 's') {
+			clear();
+			run(gridOne, tolower(c));
 			break;
 		}
 	}
